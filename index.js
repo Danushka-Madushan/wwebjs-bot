@@ -1,54 +1,48 @@
-const qrcode = require('qrcode-terminal')
+const { MessageMedia } = require("whatsapp-web.js")
+const client = require("./core/web")
+const { ReHentaiBruh, ReGoogleSearch } = require("./core/regex")
 const axios = require('axios')
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js')
+const hasPermissions = require("./core/privileges")
 
-const regex = new RegExp(`https://w{3}\\.henteibruh\\.com/20[0-9]{2}/[0-9]{2}/.+\\.html`, '')
-const urlRegex = new RegExp(`<p>Source.+?href="(https://w{3}.google.com/search\\?.+?)".target="_blank">|<p>Source:(.+?)</p>`, 'g')
-const gregx = new RegExp(`^https://www.google.com/`, '')
+/* Handle OutGoing Messages */
+client.on('message_create', async (message) => {
+    if (hasPermissions.to(message.to)) {
+        const match = ReHentaiBruh.exec(message.body)
 
-const client = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: {
-        args: ['--no-sandbox']
-    }
-})
+        if(message.body === '!ping') {
+            message.reply('Message Accepted')
+        } else if (match !== null) {
+            //const chat = await message.getChat()
+            try {
+                const content = await axios.get(match[0])
+                const matches = ReGoogleSearch.exec(content.data)
 
-client.on('qr', qr => {
-    qrcode.generate(qr, {small: true})
-})
-
-client.on('ready', () => {
-    console.log('Client is ready!')
-})
-
-client.on('message_create', (message) => {
-    if(message.body === '!ping') {
-		message.reply('pong')
-	}
-})
-
-client.on('message', async (message) => {
-    const match = regex.exec(message.body)
-    if (match !== null) {
-        const chat = await message.getChat();
-        try {
-            const content = await axios.get(match[0])
-            const matches = urlRegex.exec(content.data)
-
-            const media = await MessageMedia.fromUrl('https://cdn.myanimelist.net/images/anime/1429/135044.jpg');
-            await chat.sendMessage(media);
-            matches.forEach((match, groupIndex) => {
-                if (gregx.exec(match) !== null) {
-                    client.sendMessage(message.from, ` Souce : ${match}`)
-                } else {
-                    client.sendMessage(message.from, ` Manual Extract : ${message.body}`)
+                //const media = await MessageMedia.fromUrl('https://cdn.myanimelist.net/images/anime/1429/135044.jpg')
+                //await chat.sendMessage(media)
+                if (matches !== null) {
+                    const links = matches.groups
+                    if (links.slink) {
+                        client.sendMessage(message.from, ` Souce : ${links.slink}`)
+                    } else if (links.sname) {
+                        client.sendMessage(message.from, ` Souce : ${links.sname}`)
+                    } else {
+                        message.reply(message.from, ' Manual Extract! ')
+                    }
                 }
-            })
-        } catch(e) {
-            client.sendMessage(message.from, ` Error : ${e.message}`)
+            } catch (e) {
+                message.reply(message.from, ` Error : ${e.message}`)
+            }
         }
     }
 })
 
+/* Handle Incomming Messages */
+client.on('message', async (message) => {
+    if (message.body.startsWith('!') && !hasPermissions.from(message.from)) {
+        message.reply(`[${message.from.split('@')[0]}] Device: [WhatsApp ${message.deviceType}] is not Authorized to Use Commands`)
+    } else if (hasPermissions.from(message.from)) {
+        console.log(message)
+    }
+})
 
 client.initialize()
