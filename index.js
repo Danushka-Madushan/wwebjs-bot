@@ -12,13 +12,13 @@ client.on('message_create', async (message) => {
         if(message.body === '!ping') {
             message.reply('Message Accepted')
         } else if (match !== null) {
-            //const chat = await message.getChat()
+            const chat = await message.getChat()
             try {
                 const content = await axios.get(match[0])
                 const matches = ReGoogleSearch.exec(content.data)
 
-                //const media = await MessageMedia.fromUrl('https://cdn.myanimelist.net/images/anime/1429/135044.jpg')
-                //await chat.sendMessage(media)
+                const media = await MessageMedia.fromUrl('https://cdn.myanimelist.net/images/anime/1429/135044.jpg')
+                await chat.sendMessage(media)
                 if (matches !== null) {
                     const links = matches.groups
                     if (links.slink) {
