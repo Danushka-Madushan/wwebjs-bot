@@ -1,2 +1,2 @@
 # wwebjs-bot
-WhatsApp bot made using web.js framework
+WhatsApp bot made using whatsapweb.js framework
