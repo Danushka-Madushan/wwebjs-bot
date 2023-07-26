@@ -1,4 +1,4 @@
-const { ReNumber } = require("./regex")
+import { ReNumber } from './regex.js'
 
 const accesslist = {
     from: [
@@ -6,23 +6,20 @@ const accesslist = {
     ],
     to: [
         '94764958088',
-        '120363043597628340'
     ],
     author: [
         '94764958088',
     ]
 }
 
-const hasPermissions =  {
-    author: (number) => {
+export const Permissions = {
+    author: (number: string) => {
         return accesslist.author.includes(ReNumber(number))
     },
-    from: (number) => {
+    from: (number: string) => {
         return accesslist.from.includes(ReNumber(number))
     },
-    to: (number) => {
+    to: (number: string) => {
         return accesslist.to.includes(ReNumber(number))
     }
 }
-
-module.exports = hasPermissions
