@@ -7,6 +7,7 @@ import mongoose from 'mongoose'
 import { MongoStore } from 'wwebjs-mongo'
 import { AppEvents } from '../events/emitter.js'
 import { ENV } from '../../config/config.js'
+import { RefreshNamespace } from '../services/db-controller.js'
 
 /* connect to database */
 AppEvents.on('onStart', async () => {
@@ -26,7 +27,10 @@ export const WApp = new Client({
 mongoose.connection.on('connected', async () => {
     console.log('DB Connected')
     /* initialize whatsapp when db is ready */
-    await WApp.initialize()
+    await Promise.all([
+        RefreshNamespace(),
+        WApp.initialize()
+    ])
 })
 
 WApp.on('qr', (qr: string) => {
